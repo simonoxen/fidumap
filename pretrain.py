@@ -8,10 +8,10 @@ import numpy as np
 from pathlib import Path, PurePath
 import argparse
 
-from source.data_manager import get_pretrain_set
-from source.net3d import KeypointDetectorNetwork3d
-from source.transforms import AffineTransform3D
-from source.utils import generate_img_kp_plot
+from fidumap.data_manager import get_pretrain_set
+from fidumap.net3d import KeypointDetectorNetwork3d
+from fidumap.transforms import AffineTransform3D
+from fidumap.utils import generate_img_kp_plot
 
 def labels_to_kps(labels_data):
     n_batch = labels_data.shape[0]
