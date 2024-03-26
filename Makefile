@@ -1,5 +1,5 @@
 # Directories
-REPO_DIR=/mnt/arbeit/simon/repo/myKeymorph
+REPO_DIR=/mnt/arbeit/simon/repo/fidumap
 MODELS_DIR=$(REPO_DIR)/models
 RUNS_DIR=$(REPO_DIR)/runs
 PYTHON_BIN_DIR=/home/ningfei/miniforge3/envs/torch_test/bin

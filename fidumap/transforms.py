@@ -43,6 +43,14 @@ class AffineTransform:
         transformed_kp_extend = torch.bmm(self.matrix, kp_extend.transpose(1,2)).transpose(1,2)
         transformed_kp = transformed_kp_extend[:,:,:-1]
         return transformed_kp
+    
+    def save(self, path):
+        import SimpleITK as sitk
+        transform = sitk.AffineTransform(self.dim)
+        transform.SetMatrix([float(x) for x in list(self.matrix[0,0:-1,0:-1].detach().cpu().numpy().flatten())])
+        transform.SetTranslation([float(x) for x in list(self.matrix[0,0:-1,-1].detach().cpu().numpy().flatten())])
+        sitk.WriteTransform(transform, str(path))
+
 class AffineTransform2D(AffineTransform):
     def __init__(self, matrix=None, n_batch=1, device=None) -> None:
         super().__init__(2, matrix, n_batch, device)

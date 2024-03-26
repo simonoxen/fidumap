@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn 
 
+from fidumap.transforms import AffineTransform3D
 class CenterOfMassLayer3d(nn.Module):
     def __init__(self):
         super(CenterOfMassLayer3d, self).__init__()
@@ -67,17 +68,15 @@ class KeypointDetectorNetwork3d(nn.Module):
         points_normalized = self.net(data)
         if points_normalized.isnan().any():
             raise RuntimeError("NaNs in output.")
-        # if affine is None:
-        points = points_normalized * 2 - 1 # for grid sample
 
-        # else:
-        #     n_batch, chs, dim1, dim2, dim3 = data.shape
-        #     normalized_to_ijk = torch.eye(3).reshape((1, 3, 3)).repeat(n_batch, 1, 1).to(data.device)
-        #     for i,dim in enumerate([dim1, dim2, dim3]):
-        #         normalized_to_ijk[:,i,i] = dim
-        #     points_ijk = torch.bmm(points_normalized, normalized_to_ijk)
-        #     points_ijk = torch.cat((points_ijk, torch.ones(n_batch,chs,1)), -1)
-        #     points_world = torch.bmm(points_ijk, affine.reshape((1, 4, 4)).repeat(n_batch, 1, 1))
-        #     points = points_world[:,:,:3] # in world coords
+        if affine is None:
+            points = points_normalized * 2 - 1 # for grid sample
+        else:
+            n_batch, _, dim1, dim2, dim3 = data.shape
+            normalized_to_ijk = torch.eye(4).reshape((1, 4, 4)).repeat(n_batch, 1, 1).to(data.device)
+            for i,dim in enumerate([dim3, dim2, dim1]):
+                normalized_to_ijk[:,i,i] = dim
+            points_ijk = AffineTransform3D(normalized_to_ijk).apply_to_kp(points_normalized[:,:,[2,1,0]])
+            points = AffineTransform3D(affine).apply_to_kp(points_ijk)
         return points
     

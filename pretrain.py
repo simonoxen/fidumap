@@ -34,8 +34,8 @@ def train_loop(fixed_dataloader, model, loss_fn, optimizer, device, args):
     
     for tio_fixed_img in fixed_dataloader:
 
-        fixed_img = tio_fixed_img['mri'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
-        labels_data = tio_fixed_img['labels'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
+        fixed_img = tio_fixed_img['mri'][tio.DATA].float().to(device)
+        labels_data = tio_fixed_img['labels'][tio.DATA].float().to(device)
 
         fixed_kp = labels_to_kps(labels_data)
 
@@ -74,7 +74,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    data_path = Path('/mnt/arbeit/simon/repo/myKeymorph/data3d/labels-resampled')
+    data_path = Path('/mnt/arbeit/simon/repo/fidumap/data3d/labels-resampled')
     image_paths = sorted(data_path.glob('*.nii'))
     training_set = get_pretrain_set(image_paths)
     batch_size = 1

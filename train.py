@@ -7,12 +7,12 @@ import torchio as tio
 from pathlib import Path, PurePath
 import argparse
 
-from source.data_manager import get_train_val_sets
-from source.net3d import KeypointDetectorNetwork3d
-from source.model import RegistrationModel
-from source.keypoint_aligners import AffineAligner
-from source.transforms import AffineTransform3D
-from source.utils import generate_debug_plt3d
+from fidumap.data_manager import get_train_val_sets
+from fidumap.net3d import KeypointDetectorNetwork3d
+from fidumap.model import RegistrationModel
+from fidumap.keypoint_aligners import AffineAligner
+from fidumap.transforms import AffineTransform3D
+from fidumap.utils import generate_debug_plt3d
 
 def validation_loop(moving_dataloader, fixed_dataloader, model, loss_fn, device):
 
@@ -20,8 +20,8 @@ def validation_loop(moving_dataloader, fixed_dataloader, model, loss_fn, device)
     
     with torch.no_grad():
         for tio_moving_img, tio_fixed_img in zip(moving_dataloader,fixed_dataloader):
-            fixed_img = tio_fixed_img['mri'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
-            moving_img = tio_moving_img['mri'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
+            fixed_img = tio_fixed_img['mri'][tio.DATA].float().to(device)
+            moving_img = tio_moving_img['mri'][tio.DATA].float().to(device)
             pred_transform_matrix, _, _  = model(moving_img, None, fixed_img, None)
             transformed_img = AffineTransform3D(pred_transform_matrix).apply_to_img(moving_img)
             running_loss += loss_fn(transformed_img, fixed_img).item()
@@ -34,8 +34,8 @@ def train_loop(moving_dataloader, fixed_dataloader, model, loss_fn, optimizer, d
     
     for tio_moving_img, tio_fixed_img in zip(moving_dataloader,fixed_dataloader):
 
-        fixed_img = tio_fixed_img['mri'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
-        moving_img = tio_moving_img['mri'][tio.DATA].float().transpose(-1,-3).flip([-1,-3]).to(device)
+        fixed_img = tio_fixed_img['mri'][tio.DATA].float().to(device)
+        moving_img = tio_moving_img['mri'][tio.DATA].float().to(device)
 
         pred_transform_matrix, moving_kp, fixed_kp = model(moving_img, None, fixed_img, None)
         pred_transform = AffineTransform3D(pred_transform_matrix)
@@ -69,7 +69,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    data_path = Path('/mnt/arbeit/simon/repo/myKeymorph/data3d/images-resampled')
+    data_path = Path('/mnt/arbeit/simon/repo/fidumap/data3d/images-resampled')
     image_paths = sorted(data_path.glob('*.nii'))
     training_set, validation_set = get_train_val_sets(image_paths)
     batch_size = 1

@@ -3,3 +3,5 @@
 **/**.nii*
 runs/**
 models/**
+fidumap.egg-info/**
+fidumap/eval/models/**
