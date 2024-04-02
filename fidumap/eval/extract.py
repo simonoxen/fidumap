@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn 
 import torchio as tio
 
-from fidumap.data_manager import get_validation_transform
 from fidumap.net3d import KeypointDetectorNetwork3d
 
 def get_default_model_path(n_keypoints):
@@ -44,14 +43,6 @@ def main(n_keypoints=None, model_load=None, input=None, out_prefix=None):
         # save fiducials
         import numpy as np
         np.savetxt(str(PurePath(out_prefix + '_fiducials.csv')), output_fiducials.squeeze(0).cpu().detach().numpy(), delimiter=',')
-        # save img
-        sitk_image = tio.io.nib_to_sitk(input_img_data.squeeze(0).cpu().detach(), input_img_affine.squeeze(0).cpu().detach())
-        import SimpleITK as sitk
-        writer = sitk.ImageFileWriter()
-        writer.SetFileName(str(PurePath(out_prefix + '_img.nrrd')))
-        writer.Execute(sitk_image)
-        
-        # transform.save(PurePath(out_prefix + '_transform.tfm'))
 
 def parse_args():
     parser = argparse.ArgumentParser()

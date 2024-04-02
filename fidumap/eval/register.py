@@ -5,14 +5,13 @@ import torch
 import torch.nn as nn 
 import torchio as tio
 
-from fidumap.data_manager import get_validation_transform
 from fidumap.model import RegistrationModel
 from fidumap.net3d import KeypointDetectorNetwork3d
 from fidumap.keypoint_aligners import AffineAligner
 from fidumap.transforms import AffineTransform3D
 
 def get_default_model_path(n_keypoints):
-    return Path(__file__).parent / f'./models/keypoint_detector_{n_keypoints}.h5'
+    return Path(__file__).parent / f'./models/train_state_{n_keypoints}.h5'
 
 def main(n_keypoints=None, model_load=None, moving=None, fixed=None,  out_prefix=None):
 
@@ -43,19 +42,37 @@ def main(n_keypoints=None, model_load=None, moving=None, fixed=None,  out_prefix
     kpa = AffineAligner()
     
     model = RegistrationModel(kpn, kpa)
-    if torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
     model.to(device)
 
     model.eval()
 
     for tio_moving_img, tio_fixed_img in zip(moving_loader, fixed_loader):
-        moving_img = tio_moving_img['mri'][tio.DATA].float().to(device)
-        fixed_img = tio_fixed_img['mri'][tio.DATA].float().to(device)
-        pred_transform_matrix, moving_kp, fixed_kp  = model(moving_img, None, fixed_img, None)
+        # load data
+        moving_img_data = tio_moving_img['mri'][tio.DATA].float().to(device)
+        moving_img_affine = tio_moving_img['mri'][tio.AFFINE].float().to(device)
+        fixed_img_data = tio_fixed_img['mri'][tio.DATA].float().to(device)
+        fixed_img_affine = tio_fixed_img['mri'][tio.AFFINE].float().to(device)
+        # eval
+        pred_transform_matrix, moving_kp, fixed_kp  = model(moving_img_data, moving_img_affine, fixed_img_data, fixed_img_affine)
+        # save transform
         transform = AffineTransform3D(pred_transform_matrix)
-        transformed_img = transform.apply_to_img(moving_img)
         transform.save(PurePath(out_prefix + '_transform.tfm'))
+        # save fiducials
+        import numpy as np
+        np.savetxt(str(PurePath(out_prefix + '_fiducials_moving.csv')), moving_kp.squeeze(0).cpu().detach().numpy(), delimiter=',')
+        np.savetxt(str(PurePath(out_prefix + '_fiducials_fixed.csv')), fixed_kp.squeeze(0).cpu().detach().numpy(), delimiter=',')
+        # save img
+        import SimpleITK as sitk
+        sitk_mov_img = sitk.ReadImage(moving)
+        sitk_ref_img = sitk.ReadImage(fixed)
+        sitk_transform = sitk.ReadTransform(str(PurePath(out_prefix + '_transform.tfm')))
+        filter = sitk.ResampleImageFilter()
+        filter.SetReferenceImage(sitk_ref_img)
+        filter.SetTransform(sitk_transform)
+        sitk_out_image = filter.Execute(sitk_mov_img)
+        writer = sitk.ImageFileWriter()
+        writer.SetFileName(str(PurePath(out_prefix + '_img.nrrd')))
+        writer.Execute(sitk_out_image)
 
 def parse_args():
     parser = argparse.ArgumentParser()
