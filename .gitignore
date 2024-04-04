@@ -5,3 +5,5 @@ runs/**
 models/**
 fidumap.egg-info/**
 fidumap/eval/models/**
+fidumap/eval/data/**
+.vscode/settings.json

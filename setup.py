@@ -10,6 +10,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'fidumap_eval = fidumap.eval:main',
+            'fidumap_register = fidumap.register',
+            'fidumap_extract = fidumap.extract',
         ],
     })

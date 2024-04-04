@@ -8,7 +8,7 @@ import torchio as tio
 from fidumap.net3d import KeypointDetectorNetwork3d
 
 def get_default_model_path(n_keypoints):
-    return Path(__file__).parent / f'./models/pretrain_state_{n_keypoints}.h5'
+    return Path(__file__).parent / f'./data/pretrain_state_{n_keypoints}.h5'
 
 def main(n_keypoints=None, model_load=None, input=None, out_prefix=None):
 

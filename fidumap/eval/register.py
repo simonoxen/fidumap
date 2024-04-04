@@ -11,7 +11,7 @@ from fidumap.keypoint_aligners import AffineAligner
 from fidumap.transforms import AffineTransform3D
 
 def get_default_model_path(n_keypoints):
-    return Path(__file__).parent / f'./models/train_state_{n_keypoints}.h5'
+    return Path(__file__).parent / f'./data/train_state_{n_keypoints}.h5'
 
 def main(n_keypoints=None, model_load=None, moving=None, fixed=None,  out_prefix=None):
 
